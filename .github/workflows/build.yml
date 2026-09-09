@@ -11,14 +11,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Clang & Build Tools
+      - name: Install Build Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld llvm
+          sudo apt-get install -y gcc make
 
       - name: Compile Plugin
         run: |
-          clang -target x86_64-pc-freebsd9-elf -O2 -fPIC -shared \
+          gcc -O2 -fPIC -shared \
             src/font.c \
             src/portal_protocol.c \
             src/ui_overlay.c \
