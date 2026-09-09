@@ -11,19 +11,19 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Build Tools
+      - name: Show Repository Files
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc make
+          echo "=== Found the following files in your repository: ==="
+          find . -maxdepth 3 -not -path '*/.*'
 
-      - name: Compile Plugin
+      - name: Compile PS4 PRX
         run: |
-          gcc -O2 -fPIC -shared \
-            src/font.c \
-            src/portal_protocol.c \
-            src/ui_overlay.c \
-            src/main.c \
-            -o ps4_figure_emu.prx
+          # Collect all .c files anywhere in the repository
+          C_FILES=$(find . -name "*.c" -not -path "./.*")
+          echo "Compiling: $C_FILES"
+          
+          # Compile into shared PRX binary
+          gcc -std=c11 -O2 -fPIC -shared -I. -Isrc -Iinclude $C_FILES -o ps4_figure_emu.prx
 
       - name: Upload PRX Artifact
         uses: actions/upload-artifact@v4
