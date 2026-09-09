@@ -7,23 +7,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/openorbis/toolchain:latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Compile PRX
+      - name: Install Clang & Build Tools
         run: |
-          mkdir -p build
-          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/font.c -o build/font.o
-          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/portal_protocol.c -o build/portal_protocol.o
-          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/ui_overlay.c -o build/ui_overlay.o
-          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/main.c -o build/main.o
-          orbis-clang -target x86_64-scei-ps4-elf -shared -L$OO_TOOLCHAIN/lib -lScePad -lSceUsbd -lSceVideoOut build/*.o -o ps4_figure_emu.prx
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm
 
-      - name: Upload PRX File
-        uses: actions/upload-artifact@v3
+      - name: Compile Plugin
+        run: |
+          clang -target x86_64-pc-freebsd9-elf -O2 -fPIC -shared \
+            src/font.c \
+            src/portal_protocol.c \
+            src/ui_overlay.c \
+            src/main.c \
+            -o ps4_figure_emu.prx
+
+      - name: Upload PRX Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ps4_figure_emu
           path: ps4_figure_emu.prx
