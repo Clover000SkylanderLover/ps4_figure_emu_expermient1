@@ -7,23 +7,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/openorbis/toolchain:latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup OpenOrbis Toolchain
+      - name: Compile PRX
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang llvm lld libssl-dev
-          git clone --recurse-submodules https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain.git /home/runner/openorbis
-          echo "OO_TOOLCHAIN=/home/runner/openorbis" >> $GITHUB_ENV
-          export OO_TOOLCHAIN=/home/runner/openorbis
-          cd /home/runner/openorbis && chmod +x build.sh && ./build.sh
-
-      - name: Compile Plugin
-        run: |
-          export OO_TOOLCHAIN=/home/runner/openorbis
-          make
+          mkdir -p build
+          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/font.c -o build/font.o
+          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/portal_protocol.c -o build/portal_protocol.o
+          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/ui_overlay.c -o build/ui_overlay.o
+          orbis-clang -target x86_64-scei-ps4-elf -O2 -fPIC -I$OO_TOOLCHAIN/include -c src/main.c -o build/main.o
+          orbis-clang -target x86_64-scei-ps4-elf -shared -L$OO_TOOLCHAIN/lib -lScePad -lSceUsbd -lSceVideoOut build/*.o -o ps4_figure_emu.prx
 
       - name: Upload PRX File
         uses: actions/upload-artifact@v3
